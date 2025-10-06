@@ -13,7 +13,7 @@ module.exports = function (req, res, next) {
 
     // 3. Verificar si el token es válido
     try {
-        const decoded = jwt.verify(token, 'tu_secreto_jwt'); // Usa la misma clave secreta
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Usa la misma clave secreta
 
         // 4. Si es válido, añadir el usuario del payload a la solicitud (req)
         req.user = decoded.user;

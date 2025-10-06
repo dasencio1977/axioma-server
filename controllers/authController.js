@@ -34,11 +34,11 @@ const registerUser = async (req, res) => {
         const payload = { user: { id: userId } };
         jwt.sign(
             payload,
-            'tu_secreto_jwt', // ¡Deberías guardar esto en un archivo .env!
+            process.env.JWT_SECRET, // <-- Debe usar la variable de entorno
             { expiresIn: '5h' },
             (err, token) => {
                 if (err) throw err;
-                res.status(201).json({ token });
+                res.json({ token });
             }
         );
 
@@ -74,7 +74,7 @@ const loginUser = async (req, res) => {
         const payload = { user: { id: user.user_id } };
         jwt.sign(
             payload,
-            'tu_secreto_jwt',
+            process.env.JWT_SECRET, // <-- Debe usar la variable de entorno
             { expiresIn: '5h' },
             (err, token) => {
                 if (err) throw err;
