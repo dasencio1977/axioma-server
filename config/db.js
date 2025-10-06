@@ -1,14 +1,14 @@
 // server/config/db.js
 
 const { Pool } = require('pg');
+require('dotenv').config();
 
-// Reemplaza estos valores con tus propias credenciales de PostgreSQL
+const connectionString = process.env.DATABASE_URL;
+
 const pool = new Pool({
-    user: 'postgres',       // Tu usuario de PostgreSQL (por defecto suele ser 'postgres')
-    host: 'db.jjuojmmayofkjmaxrqok.supabase.co',
-    database: 'mydb', // El nombre de la base de datos que crearemos
-    password: '', // La contraseña que definiste para PostgreSQL
-    port: 5432,
+    connectionString,
+    // Si estás desplegando en un servicio que requiere SSL, descomenta la siguiente línea
+    // ssl: { rejectUnauthorized: false }
 });
 
 module.exports = pool;
