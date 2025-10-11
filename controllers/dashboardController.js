@@ -5,39 +5,41 @@ const db = require('../config/db');
 // @desc    Obtener un resumen de datos para el dashboard del usuario.
 const getDashboardSummary = async (req, res) => {
     try {
-        // Obtenemos el ID del usuario del token JWT, gracias al middleware.
-        const userId = req.user.id;
-
-        // --- EJECUTAREMOS MÚLTIPLES CONSULTAS EN PARALELO ---
-        // Esto es mucho más eficiente que hacerlas una por una.
-        // Promise.all espera a que todas las promesas (consultas) se completen.
+        const userId = parseInt(req.user.id, 10);
 
         const [revenueResult, receivableResult, clientCountResult, overdueCountResult] = await Promise.all([
-            // 1. Calcular Ingresos Totales (suma de facturas 'Pagada')
+            // Ingresos Totales (sin cambios)
             db.query(
-                // COALESCE es una función de SQL que devuelve 0 si el resultado de SUM es NULL (es decir, no hay facturas pagadas).
                 "SELECT COALESCE(SUM(total_amount), 0) AS total_revenue FROM invoices WHERE user_id = $1 AND status = 'Pagada'",
                 [userId]
             ),
-            // 2. Calcular Cuentas por Cobrar (suma de facturas 'Enviada' o 'Vencida')
-            db.query(
-                "SELECT COALESCE(SUM(total_amount), 0) AS total_receivable FROM invoices WHERE user_id = $1 AND status IN ('Enviada', 'Vencida')",
-                [userId]
-            ),
-            // 3. Contar el número total de clientes
+            // Cuentas por Cobrar (sin cambios)
+            db.query(`
+                SELECT COALESCE(SUM(i.total_amount - COALESCE(p.total_paid, 0)), 0) AS total_receivable
+                FROM invoices i
+                LEFT JOIN (
+                    SELECT invoice_id, SUM(amount_paid) as total_paid
+                    FROM payments
+                    GROUP BY invoice_id
+                ) p ON i.invoice_id = p.invoice_id
+                WHERE i.user_id = $1 AND i.status IN ('Enviada', 'Vencida', 'Parcialmente Pagada');
+            `, [userId]),
+            // Conteo de Clientes (sin cambios)
             db.query(
                 "SELECT COUNT(*) AS client_count FROM clients WHERE user_id = $1",
                 [userId]
             ),
-            // 4. Contar el número de facturas vencidas
-            db.query(
-                "SELECT COUNT(*) AS overdue_count FROM invoices WHERE user_id = $1 AND status = 'Vencida'",
-                [userId]
-            )
+
+            // LA CORRECCIÓN: Calcular las facturas vencidas en tiempo real
+            db.query(`
+                SELECT COUNT(*) AS overdue_count 
+                FROM invoices 
+                WHERE user_id = $1 
+                AND status IN ('Enviada', 'Parcialmente Pagada') 
+                AND due_date < CURRENT_DATE;
+            `, [userId])
         ]);
 
-        // --- CONSTRUIMOS EL OBJETO DE RESPUESTA ---
-        // Extraemos los valores de los resultados de las consultas.
         const summary = {
             totalRevenue: parseFloat(revenueResult.rows[0].total_revenue),
             totalReceivable: parseFloat(receivableResult.rows[0].total_receivable),
@@ -45,9 +47,7 @@ const getDashboardSummary = async (req, res) => {
             overdueCount: parseInt(overdueCountResult.rows[0].overdue_count)
         };
 
-        // Enviamos el objeto de resumen como respuesta.
         res.json(summary);
-
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Error en el servidor al obtener el resumen del dashboard');

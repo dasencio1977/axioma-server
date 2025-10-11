@@ -16,6 +16,7 @@ const {
     downloadInvoicePdf,
     addPaymentToInvoice,
     updateInvoiceStatus,
+    getNextInvoiceNumber,
 } = require('../controllers/invoiceController');
 
 // Le decimos al router que use el middleware de autenticación para TODAS las rutas definidas en este archivo.
@@ -35,6 +36,9 @@ router.put('/:id/status', updateInvoiceStatus);
 
 // Nueva ruta para generar el PDF
 router.get('/:id/pdf', downloadInvoicePdf);
+
+// Ruta para el siguiente número de factura (debe ir antes de /:id)
+router.get('/next-number', getNextInvoiceNumber);
 
 // Ruta para manejar una factura específica por su ID.
 router.route('/:id')
