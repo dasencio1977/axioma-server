@@ -1,4 +1,3 @@
-// server/utils/createTrialBalancePdf.js
 const PDFDocument = require('pdfkit');
 
 function createTrialBalancePdf(dataCallback, endCallback, reportData, profile, asOfDate) {
@@ -12,7 +11,7 @@ function createTrialBalancePdf(dataCallback, endCallback, reportData, profile, a
     doc.fontSize(10).text(`Al ${new Date(asOfDate).toLocaleDateString()}`, { align: 'center' });
     doc.moveDown(2);
 
-    // Tabla (simplificada)
+    // Tabla
     const tableTop = 150;
     doc.fontSize(10).font('Helvetica-Bold')
         .text('Nº Cuenta', 50, tableTop)
@@ -40,7 +39,6 @@ function createTrialBalancePdf(dataCallback, endCallback, reportData, profile, a
         .text('TOTALES', 150, totalY, { width: 200 })
         .text(`$${totalDebits.toFixed(2)}`, 350, totalY, { width: 100, align: 'right' })
         .text(`$${totalCredits.toFixed(2)}`, 450, totalY, { width: 100, align: 'right' });
-
 
     doc.end();
 }

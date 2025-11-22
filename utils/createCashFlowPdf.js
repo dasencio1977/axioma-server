@@ -1,4 +1,3 @@
-// server/utils/createCashFlowPdf.js
 const PDFDocument = require('pdfkit');
 
 function createCashFlowPdf(dataCallback, endCallback, reportData, profile) {

@@ -1,23 +1,14 @@
-// server/controllers/vendorController.js
-
 const db = require('../config/db');
 
-// @desc    Obtener suplidores del usuario con paginación
 const getVendors = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
 
-        // 1. Si la URL contiene "?all=true", devolvemos todos los suplidores.
         if (req.query.all === 'true') {
-            const allVendors = await db.query(
-                'SELECT vendor_id, name FROM vendors WHERE user_id = $1 ORDER BY name ASC',
-                [userId]
-            );
-            // Devolvemos directamente el array de filas.
+            const allVendors = await db.query('SELECT vendor_id, name FROM vendors WHERE user_id = $1 ORDER BY name ASC', [userId]);
             return res.json(allVendors.rows);
         }
 
-        // 2. Si no, procedemos con la lógica de paginación normal.
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const offset = (page - 1) * limit;
@@ -30,20 +21,16 @@ const getVendors = async (req, res) => {
         const vendors = dataResult.rows;
         const totalPages = Math.ceil(parseInt(countResult.rows[0].count, 10) / limit);
 
-        // Devolvemos el objeto de paginación.
         res.json({ vendors, totalPages, currentPage: page });
-
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Error en el servidor');
     }
 };
 
-// @desc    Crear un nuevo suplidor
 const createVendor = async (req, res) => {
     try {
-        const userId = req.user.id;
-        // Extraemos todos los campos del cuerpo de la solicitud
+        const userId = parseInt(req.user.id, 10);
         const {
             name, email, phone, ein, corporation_id, merchant_id,
             contact_first_name, contact_middle_initial, contact_last_name, contact_phone,
@@ -64,10 +51,9 @@ const createVendor = async (req, res) => {
     }
 };
 
-// @desc    Actualizar un suplidor
 const updateVendor = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
         const {
             name, email, phone, ein, corporation_id, merchant_id,
@@ -93,10 +79,9 @@ const updateVendor = async (req, res) => {
     }
 };
 
-// @desc    Eliminar un suplidor
 const deleteVendor = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
         const deletedVendor = await db.query('DELETE FROM vendors WHERE vendor_id = $1 AND user_id = $2 RETURNING *', [id, userId]);
         if (deletedVendor.rows.length === 0) {

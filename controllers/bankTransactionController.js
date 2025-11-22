@@ -1,4 +1,3 @@
-// server/controllers/bankTransactionController.js
 const db = require('../config/db');
 
 const getTransactionsForAccount = async (req, res) => {
@@ -14,10 +13,7 @@ const getTransactionsForAccount = async (req, res) => {
         }
 
         const accountCheck = await db.query('SELECT user_id FROM bank_accounts WHERE account_id = $1', [accountId]);
-
-        //console.log("Account check:", accountCheck.rows);
         if (accountCheck.rows.length === 0 || accountCheck.rows[0].user_id !== userId) {
-            //console.log("Account not found or unauthorized");
             return res.status(404).json({ msg: 'Cuenta bancaria no encontrada o no autorizada.' });
         }
 
@@ -41,18 +37,13 @@ const createTransactionForAccount = async (req, res) => {
     const userId = parseInt(req.user.id, 10);
     const { transaction_date, description, amount } = req.body;
     const client = await db.connect();
-
-    console.log("Creating transaction:", { accountId, userId, transaction_date, description, amount });
     try {
         if (isNaN(accountId)) {
             throw new Error('El ID de la cuenta bancaria no es válido.');
-            console.log("Account ID is not a number");
         }
         await client.query('BEGIN');
         const accountCheck = await client.query('SELECT user_id FROM bank_accounts WHERE account_id = $1', [accountId]);
-        //console.log("Account check:", accountCheck.rows);
         if (accountCheck.rows.length === 0 || accountCheck.rows[0].user_id !== userId) {
-            //console.log("Create transaction: Account not found or unauthorized");
             throw new Error('Cuenta bancaria no encontrada o no autorizada.');
         }
         const newTransaction = await client.query(
@@ -75,20 +66,15 @@ const createTransactionForAccount = async (req, res) => {
 
 const categorizeTransaction = async (req, res) => {
     const { transactionId } = req.params;
-    const userId = req.user.id;
-    // La categoría y la descripción vienen del formulario del modal
+    const userId = parseInt(req.user.id, 10);
     const { category, description, vendor_id } = req.body;
     const client = await db.connect();
-
     try {
         await client.query('BEGIN');
-
-        // 1. Obtenemos los datos de la transacción bancaria original
         const txRes = await client.query('SELECT * FROM bank_transactions WHERE transaction_id = $1 AND user_id = $2', [transactionId, userId]);
         if (txRes.rows.length === 0) throw new Error('Transacción bancaria no encontrada.');
         const bankTx = txRes.rows[0];
 
-        // 2. Creamos un nuevo registro en la tabla 'expenses'
         const expenseRes = await client.query(
             `INSERT INTO expenses (user_id, description, amount, category, expense_date, vendor_id) 
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING expense_id`,
@@ -96,15 +82,12 @@ const categorizeTransaction = async (req, res) => {
         );
         const newExpenseId = expenseRes.rows[0].expense_id;
 
-        // 3. Actualizamos la transacción bancaria para marcarla como conciliada y vincularla al nuevo gasto
         await client.query(
             'UPDATE bank_transactions SET is_reconciled = true, linked_expense_id = $1 WHERE transaction_id = $2',
             [newExpenseId, transactionId]
         );
-
         await client.query('COMMIT');
         res.json({ msg: 'Transacción categorizada y conciliada exitosamente.' });
-
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(400).json({ msg: err.message || 'Error al conciliar la transacción.' });

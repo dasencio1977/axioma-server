@@ -1,4 +1,3 @@
-// server/utils/createBsReportPdf.js
 const PDFDocument = require('pdfkit');
 
 function createBsReportPdf(dataCallback, endCallback, reportData, profile, asOfDate) {
@@ -31,7 +30,7 @@ function createBsReportPdf(dataCallback, endCallback, reportData, profile, asOfD
     currentY += 40;
 
     currentY = drawSection('Pasivos', reportData.liabilities, currentY);
-    currentY = drawSection('Patrimonio', reportData.equity, currentY + 20);
+    currentY = drawSection('Patrimonio', reportData.equity, currentY + 20); // Damos espacio extra
     doc.fontSize(12).font('Helvetica-Bold').text('Total Pasivos + Patrimonio', 70, currentY).text(`$${reportData.totalLiabilitiesAndEquity.toFixed(2)}`, { align: 'right' });
 
     doc.end();

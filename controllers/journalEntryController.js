@@ -1,10 +1,8 @@
-// server/controllers/journalEntryController.js
 const db = require('../config/db');
 
-// @desc    Obtener lista de asientos contables (paginada)
 const getJournalEntries = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const offset = (page - 1) * limit;
@@ -24,14 +22,12 @@ const getJournalEntries = async (req, res) => {
     }
 };
 
-// @desc    Crear un nuevo asiento contable (Transacción con validación)
 const createJournalEntry = async (req, res) => {
     const { entry_date, description, lines } = req.body;
-    const userId = req.user.id;
+    const userId = parseInt(req.user.id, 10);
     const client = await db.connect();
 
     try {
-        // --- VALIDACIÓN FUNDAMENTAL ANTES DE TOCAR LA BASE DE DATOS ---
         if (!lines || lines.length < 2) {
             throw new Error('Un asiento contable debe tener al menos dos líneas.');
         }
@@ -51,11 +47,9 @@ const createJournalEntry = async (req, res) => {
             }
         }
 
-        // La regla de oro de la contabilidad
         if (totalDebits.toFixed(2) !== totalCredits.toFixed(2)) {
             throw new Error(`El asiento no está balanceado. Débitos: ${totalDebits.toFixed(2)}, Créditos: ${totalCredits.toFixed(2)}`);
         }
-        // --- FIN DE LA VALIDACIÓN ---
 
         await client.query('BEGIN');
 
@@ -85,11 +79,10 @@ const createJournalEntry = async (req, res) => {
     }
 };
 
-// @desc    Obtener un asiento contable por ID
 const getJournalEntryById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
 
         const entryRes = await db.query('SELECT * FROM journal_entries WHERE entry_id = $1 AND user_id = $2', [id, userId]);
         if (entryRes.rows.length === 0) return res.status(404).json({ msg: 'Asiento no encontrado.' });
@@ -109,15 +102,13 @@ const getJournalEntryById = async (req, res) => {
     }
 };
 
-// @desc    Actualizar un asiento contable
 const updateJournalEntry = async (req, res) => {
     const { id } = req.params;
     const { entry_date, description, lines } = req.body;
-    const userId = req.user.id;
+    const userId = parseInt(req.user.id, 10);
     const client = await db.connect();
 
     try {
-        // Misma validación de balance que en la creación
         if (!lines || lines.length < 2) throw new Error('Un asiento debe tener al menos dos líneas.');
         let totalDebits = 0; let totalCredits = 0;
         lines.forEach(line => {
@@ -127,11 +118,8 @@ const updateJournalEntry = async (req, res) => {
         if (totalDebits.toFixed(2) !== totalCredits.toFixed(2)) throw new Error('El asiento no está balanceado.');
 
         await client.query('BEGIN');
-        // Actualizamos la cabecera
         await client.query('UPDATE journal_entries SET entry_date = $1, description = $2 WHERE entry_id = $3 AND user_id = $4', [entry_date, description, id, userId]);
-        // Borramos las líneas antiguas
         await client.query('DELETE FROM journal_entry_lines WHERE entry_id = $1', [id]);
-        // Insertamos las líneas nuevas (estrategia delete-then-recreate)
         for (const line of lines) {
             await client.query('INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, $3, $4);', [id, line.account_id, line.line_type, line.amount]);
         }
@@ -144,6 +132,7 @@ const updateJournalEntry = async (req, res) => {
         client.release();
     }
 };
+
 
 module.exports = {
     getJournalEntries,

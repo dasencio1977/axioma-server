@@ -1,5 +1,3 @@
-// server/routes/vendors.js
-
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
@@ -11,7 +9,6 @@ const {
     deleteVendor
 } = require('../controllers/vendorController');
 
-// Aplicamos el middleware a todas las rutas.
 router.use(authMiddleware);
 
 router.route('/')

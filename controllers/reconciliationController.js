@@ -1,9 +1,8 @@
 const db = require('../config/db');
 
-// @desc    Obtener pagos de clientes no conciliados
 const getUnmatchedPayments = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const query = `
             SELECT p.payment_id, p.amount_paid, p.payment_date, i.invoice_number, c.client_name
             FROM payments p
@@ -20,9 +19,8 @@ const getUnmatchedPayments = async (req, res) => {
     }
 };
 
-// @desc    Vincular una transacción bancaria a un pago de cliente
 const matchPayment = async (req, res) => {
-    const userId = req.user.id;
+    const userId = parseInt(req.user.id, 10);
     const { bankTransactionId, paymentId } = req.body;
     const client = await db.connect();
     try {
@@ -47,9 +45,8 @@ const matchPayment = async (req, res) => {
     }
 };
 
-// @desc    Conciliar un depósito bancario como un asiento contable
 const reconcileAsDeposit = async (req, res) => {
-    const userId = req.user.id;
+    const userId = parseInt(req.user.id, 10);
     const { bankTransactionId, creditAccountId, description } = req.body;
     const client = await db.connect();
     try {
@@ -80,7 +77,6 @@ const reconcileAsDeposit = async (req, res) => {
     }
 };
 
-// LA CORRECCIÓN: Asegurarse de que la nueva función esté en la lista de exportación.
 module.exports = {
     getUnmatchedPayments,
     matchPayment,

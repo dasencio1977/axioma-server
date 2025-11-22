@@ -1,32 +1,29 @@
-// server/controllers/productController.js
-
 const db = require('../config/db');
 
-// @desc    Obtener productos del usuario (con paginación o todos)
 const getProducts = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
+        const baseQuery = `
+            SELECT p.*, a.account_name as gl_account_name
+            FROM products p
+            LEFT JOIN accounts a ON p.gl_account_id = a.account_id
+            WHERE p.user_id = $1
+        `;
 
-        // Lógica para permitir obtener TODOS los productos para los dropdowns
         if (req.query.all === 'true') {
-            const allProducts = await db.query('SELECT * FROM products WHERE user_id = $1 ORDER BY name ASC', [userId]);
+            const allProducts = await db.query(`${baseQuery} ORDER BY p.name ASC`, [userId]);
             return res.json(allProducts.rows);
         }
 
-        // Lógica de paginación para la lista principal
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const offset = (page - 1) * limit;
-
         const [dataResult, countResult] = await Promise.all([
-            db.query('SELECT * FROM products WHERE user_id = $1 ORDER BY name ASC LIMIT $2 OFFSET $3', [userId, limit, offset]),
+            db.query(`${baseQuery} ORDER BY p.name ASC LIMIT $2 OFFSET $3`, [userId, limit, offset]),
             db.query('SELECT COUNT(*) FROM products WHERE user_id = $1', [userId])
         ]);
-
         const products = dataResult.rows;
-        const totalProducts = parseInt(countResult.rows[0].count, 10);
-        const totalPages = Math.ceil(totalProducts / limit);
-
+        const totalPages = Math.ceil(parseInt(countResult.rows[0].count, 10) / limit);
         res.json({ products, totalPages, currentPage: page });
     } catch (err) {
         console.error(err.message);
@@ -34,16 +31,30 @@ const getProducts = async (req, res) => {
     }
 };
 
-// @desc    Crear un nuevo producto/servicio
 const createProduct = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const { code, name, product_type, price, cost, account_name, sub_account, tax_account } = req.body;
+        const userId = parseInt(req.user.id, 10);
+        const {
+            code, name, product_type, price, cost, gl_account_id,
+            is_sales_item, is_purchase_item, is_service_item,
+            tax1_name, tax1_applies, tax2_name, tax2_applies,
+            tax3_name, tax3_applies, tax4_name, tax4_applies
+        } = req.body;
 
         const newProduct = await db.query(
-            `INSERT INTO products (user_id, code, name, product_type, price, cost, account_name, sub_account, tax_account) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [userId, code, name, product_type, price, cost, account_name, sub_account, tax_account]
+            `INSERT INTO products (
+                user_id, code, name, product_type, price, cost, gl_account_id, 
+                is_sales_item, is_purchase_item, is_service_item, 
+                tax1_name, tax1_applies, tax2_name, tax2_applies, 
+                tax3_name, tax3_applies, tax4_name, tax4_applies
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
+            RETURNING *`,
+            [
+                userId, code, name, product_type, price, cost, gl_account_id || null,
+                !!is_sales_item, !!is_purchase_item, !!is_service_item,
+                tax1_name, !!tax1_applies, tax2_name, !!tax2_applies,
+                tax3_name, !!tax3_applies, tax4_name, !!tax4_applies
+            ]
         );
         res.status(201).json(newProduct.rows[0]);
     } catch (err) {
@@ -52,22 +63,33 @@ const createProduct = async (req, res) => {
     }
 };
 
-// @desc    Actualizar un producto/servicio
 const updateProduct = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
-        const { code, name, product_type, price, cost, account_name, sub_account, tax_account } = req.body;
+        const {
+            code, name, product_type, price, cost, gl_account_id,
+            is_sales_item, is_purchase_item, is_service_item,
+            tax1_name, tax1_applies, tax2_name, tax2_applies,
+            tax3_name, tax3_applies, tax4_name, tax4_applies
+        } = req.body;
 
         const updatedProduct = await db.query(
-            `UPDATE products SET code = $1, name = $2, product_type = $3, price = $4, cost = $5, account_name = $6, sub_account = $7, tax_account = $8 
-             WHERE product_id = $9 AND user_id = $10 RETURNING *`,
-            [code, name, product_type, price, cost, account_name, sub_account, tax_account, id, userId]
+            `UPDATE products SET 
+                code = $1, name = $2, product_type = $3, price = $4, cost = $5, gl_account_id = $6, 
+                is_sales_item = $7, is_purchase_item = $8, is_service_item = $9, 
+                tax1_name = $10, tax1_applies = $11, tax2_name = $12, tax2_applies = $13, 
+                tax3_name = $14, tax3_applies = $15, tax4_name = $16, tax4_applies = $17 
+             WHERE product_id = $18 AND user_id = $19 RETURNING *`,
+            [
+                code, name, product_type, price, cost, gl_account_id || null,
+                !!is_sales_item, !!is_purchase_item, !!is_service_item,
+                tax1_name, !!tax1_applies, tax2_name, !!tax2_applies,
+                tax3_name, !!tax3_applies, tax4_name, !!tax4_applies,
+                id, userId
+            ]
         );
-
-        if (updatedProduct.rows.length === 0) {
-            return res.status(404).json({ msg: 'Producto no encontrado o no autorizado' });
-        }
+        if (updatedProduct.rows.length === 0) return res.status(404).json({ msg: 'Producto no encontrado.' });
         res.json(updatedProduct.rows[0]);
     } catch (err) {
         console.error(err.message);
@@ -75,27 +97,19 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// @desc    Eliminar un producto/servicio
 const deleteProduct = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
-
-        const deletedProduct = await db.query('DELETE FROM products WHERE product_id = $1 AND user_id = $2 RETURNING *', [id, userId]);
-
-        if (deletedProduct.rows.length === 0) {
-            return res.status(404).json({ msg: 'Producto no encontrado o no autorizado' });
+        const deletedProduct = await db.query('DELETE FROM products WHERE product_id = $1 AND user_id = $2', [id, userId]);
+        if (deletedProduct.rowCount === 0) {
+            return res.status(404).json({ msg: 'Producto no encontrado.' });
         }
-        res.json({ msg: 'Producto eliminado correctamente' });
+        res.json({ msg: 'Producto eliminado correctamente.' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Error en el servidor');
     }
 };
 
-module.exports = {
-    getProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-};
+module.exports = { getProducts, createProduct, updateProduct, deleteProduct };

@@ -9,7 +9,7 @@ const {
     getBalanceSheet,
     getCashFlowStatement,
     downloadPlReportPdf,
-    downloadTbReportPdf,
+    downloadTrialBalancePdf,
     downloadBsReportPdf,
     downloadCashFlowPdf,
     getGeneralLedger,
@@ -24,7 +24,7 @@ router.post('/general-ledger', authMiddleware, getGeneralLedger);
 
 // --- Rutas para descargar los PDFs de los reportes ---
 router.post('/profit-loss/pdf', authMiddleware, downloadPlReportPdf);
-router.post('/trial-balance/pdf', authMiddleware, downloadTbReportPdf);
+router.post('/trial-balance/pdf', authMiddleware, downloadTrialBalancePdf);
 router.post('/balance-sheet/pdf', authMiddleware, downloadBsReportPdf);
 router.post('/cash-flow/pdf', authMiddleware, downloadCashFlowPdf);
 

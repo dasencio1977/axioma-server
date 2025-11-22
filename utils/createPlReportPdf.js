@@ -1,4 +1,3 @@
-// server/utils/createPlReportPdf.js
 const PDFDocument = require('pdfkit');
 
 function createPlReportPdf(dataCallback, endCallback, reportData, profile) {
@@ -19,7 +18,7 @@ function createPlReportPdf(dataCallback, endCallback, reportData, profile) {
     doc.moveDown();
 
     doc.font('Helvetica-Bold').text('Gastos Totales:', 50);
-    doc.font('Helvetica').text(`$${reportData.totalExpenses.toFixed(2)}`, { align: 'right' });
+    doc.font('Helvetica').text(`($${reportData.totalExpenses.toFixed(2)})`, { align: 'right' });
     doc.moveDown(2);
 
     // Línea divisoria

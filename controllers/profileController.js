@@ -1,9 +1,9 @@
-// server/controllers/profileController.js
 const db = require('../config/db');
 
 const getProfile = async (req, res) => {
     try {
-        const profile = await db.query('SELECT * FROM profiles WHERE user_id = $1', [req.user.id]);
+        const userId = parseInt(req.user.id, 10);
+        const profile = await db.query('SELECT * FROM profiles WHERE user_id = $1', [userId]);
         if (profile.rows.length === 0) {
             return res.json({});
         }
@@ -16,14 +16,14 @@ const getProfile = async (req, res) => {
 
 const upsertProfile = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const {
             company_name, email, phone, ein, corporation_id, merchant_id,
             address_1, address_2, address_3, city, state, country, zip_code,
             is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
             postal_city, postal_state, postal_country, postal_zip_code,
             fiscal_year_start, base_currency, incorporation_date,
-            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold
+            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
         } = req.body;
 
         const query = `
@@ -33,9 +33,9 @@ const upsertProfile = async (req, res) => {
                 is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
                 postal_city, postal_state, postal_country, postal_zip_code,
                 fiscal_year_start, base_currency, incorporation_date,
-                default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold
+                default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
             ON CONFLICT (user_id)
             DO UPDATE SET
                 company_name = EXCLUDED.company_name, email = EXCLUDED.email, phone = EXCLUDED.phone, ein = EXCLUDED.ein,
@@ -48,7 +48,7 @@ const upsertProfile = async (req, res) => {
                 fiscal_year_start = EXCLUDED.fiscal_year_start, base_currency = EXCLUDED.base_currency,
                 incorporation_date = EXCLUDED.incorporation_date, default_accounts_receivable = EXCLUDED.default_accounts_receivable,
                 default_sales_income = EXCLUDED.default_sales_income, default_accounts_payable = EXCLUDED.default_accounts_payable,
-                default_cost_of_goods_sold = EXCLUDED.default_cost_of_goods_sold
+                default_cost_of_goods_sold = EXCLUDED.default_cost_of_goods_sold, default_cash_account = EXCLUDED.default_cash_account
             RETURNING *;
         `;
         const values = [
@@ -57,7 +57,7 @@ const upsertProfile = async (req, res) => {
             is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
             postal_city, postal_state, postal_country, postal_zip_code,
             fiscal_year_start, base_currency, incorporation_date,
-            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold
+            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
         ];
 
         const updatedProfile = await db.query(query, values);

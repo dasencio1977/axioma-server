@@ -1,10 +1,13 @@
-// server/routes/journalEntries.js
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 
-const { getJournalEntries, createJournalEntry, getJournalEntryById, updateJournalEntry } = require('../controllers/journalEntryController');
-
+const {
+    getJournalEntries,
+    createJournalEntry,
+    getJournalEntryById,
+    updateJournalEntry
+} = require('../controllers/journalEntryController');
 
 router.use(authMiddleware);
 

@@ -1,11 +1,8 @@
-// server/controllers/accountController.js
-
 const db = require('../config/db');
 
-// @desc    Obtener cuentas del usuario (con paginación o todas)
 const getAccounts = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
 
         if (req.query.all === 'true') {
             const allAccounts = await db.query('SELECT * FROM accounts WHERE user_id = $1 ORDER BY account_number ASC', [userId]);
@@ -22,8 +19,7 @@ const getAccounts = async (req, res) => {
         ]);
 
         const accounts = dataResult.rows;
-        const totalAccounts = parseInt(countResult.rows[0].count, 10);
-        const totalPages = Math.ceil(totalAccounts / limit);
+        const totalPages = Math.ceil(parseInt(countResult.rows[0].count, 10) / limit);
 
         res.json({ accounts, totalPages, currentPage: page });
     } catch (err) {
@@ -32,10 +28,9 @@ const getAccounts = async (req, res) => {
     }
 };
 
-// @desc    Crear una nueva cuenta contable
 const createAccount = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { account_number, account_name, account_type, account_subtype, description, is_active } = req.body;
 
         const newAccount = await db.query(
@@ -46,18 +41,16 @@ const createAccount = async (req, res) => {
         res.status(201).json(newAccount.rows[0]);
     } catch (err) {
         console.error(err.message);
-        // Manejar error de número de cuenta duplicado
-        if (err.code === '23505') { // Código de error de PostgreSQL para violación de unicidad
+        if (err.code === '23505') {
             return res.status(400).json({ msg: 'El número de cuenta ya existe.' });
         }
         res.status(500).send('Error en el servidor');
     }
 };
 
-// @desc    Actualizar una cuenta contable
 const updateAccount = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
         const { account_number, account_name, account_type, account_subtype, description, is_active } = req.body;
 
@@ -80,12 +73,10 @@ const updateAccount = async (req, res) => {
     }
 };
 
-// @desc    Eliminar una cuenta contable
 const deleteAccount = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
-        // A futuro, se podría añadir una lógica para no permitir borrar cuentas con transacciones.
         const deletedAccount = await db.query('DELETE FROM accounts WHERE account_id = $1 AND user_id = $2 RETURNING *', [id, userId]);
         if (deletedAccount.rows.length === 0) {
             return res.status(404).json({ msg: 'Cuenta no encontrada o no autorizada' });
