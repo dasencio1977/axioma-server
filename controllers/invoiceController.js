@@ -1,7 +1,6 @@
 const db = require('../config/db');
 const { createInvoicePdf } = require('../utils/createInvoicePdf');
 
-<<<<<<< HEAD
 async function calculateInvoiceTotals(userId, items, client) {
     const profileRes = await client.query('SELECT * FROM profiles WHERE user_id = $1', [userId]);
     if (profileRes.rows.length === 0) throw new Error('Perfil de empresa no encontrado. Por favor, configure sus tasas de impuesto en la página de Configuración.');
@@ -17,27 +16,11 @@ async function calculateInvoiceTotals(userId, items, client) {
 
         const productRes = await client.query('SELECT * FROM products WHERE product_id = $1 AND user_id = $2', [productId, userId]);
         if (productRes.rows.length === 0) throw new Error(`Producto con ID ${productId} no encontrado.`);
-=======
-// Función auxiliar para calcular impuestos (puedes ponerla al principio del archivo)
-async function calculateInvoiceTotals(userId, items, client) {
-    const profileRes = await client.query('SELECT * FROM profiles WHERE user_id = $1', [userId]);
-    if (profileRes.rows.length === 0) throw new Error('Perfil de empresa no encontrado.');
-    const profile = profileRes.rows[0];
-
-    let subtotal = 0;
-    const taxTotals = { tax1: 0, tax2: 0, tax3: 0, tax4: 0 };
-    const processedItems = [];
-
-    for (const item of items) {
-        const productRes = await client.query('SELECT * FROM products WHERE product_id = $1 AND user_id = $2', [item.product_id, userId]);
-        if (productRes.rows.length === 0) throw new Error(`Producto con ID ${item.product_id} no encontrado.`);
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         const product = productRes.rows[0];
 
         const lineSubtotal = (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
         subtotal += lineSubtotal;
 
-<<<<<<< HEAD
         const lineTaxes = { tax1_amount: 0, tax2_amount: 0, tax3_amount: 0, tax4_amount: 0 };
         if (product.tax1_applies && profile.tax1_rate > 0) lineTaxes.tax1_amount = lineSubtotal * (parseFloat(profile.tax1_rate) || 0);
         if (product.tax2_applies && profile.tax2_rate > 0) lineTaxes.tax2_amount = lineSubtotal * (parseFloat(profile.tax2_rate) || 0);
@@ -48,44 +31,20 @@ async function calculateInvoiceTotals(userId, items, client) {
         taxTotals.tax2_total += lineTaxes.tax2_amount;
         taxTotals.tax3_total += lineTaxes.tax3_amount;
         taxTotals.tax4_total += lineTaxes.tax4_amount;
-=======
-        const lineTaxes = { tax1: 0, tax2: 0, tax3: 0, tax4: 0 };
-        if (product.tax1_applies) lineTaxes.tax1 = lineSubtotal * (parseFloat(profile.tax1_rate) || 0);
-        if (product.tax2_applies) lineTaxes.tax2 = lineSubtotal * (parseFloat(profile.tax2_rate) || 0);
-        if (product.tax3_applies) lineTaxes.tax3 = lineSubtotal * (parseFloat(profile.tax3_rate) || 0);
-        if (product.tax4_applies) lineTaxes.tax4 = lineSubtotal * (parseFloat(profile.tax4_rate) || 0);
-
-        taxTotals.tax1 += lineTaxes.tax1;
-        taxTotals.tax2 += lineTaxes.tax2;
-        taxTotals.tax3 += lineTaxes.tax3;
-        taxTotals.tax4 += lineTaxes.tax4;
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 
         processedItems.push({ ...item, line_total: lineSubtotal, ...lineTaxes });
     }
 
-<<<<<<< HEAD
     const grandTotal = subtotal + taxTotals.tax1_total + taxTotals.tax2_total + taxTotals.tax3_total + taxTotals.tax4_total;
     return { subtotal, taxTotals, grandTotal, processedItems };
 }
 
-=======
-    const grandTotal = subtotal + taxTotals.tax1 + taxTotals.tax2 + taxTotals.tax3 + taxTotals.tax4;
-    return { subtotal, taxTotals, grandTotal, processedItems };
-}
-
-// @desc    Crear una nueva factura y su asiento contable (Transacción)
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 const createInvoice = async (req, res) => {
     const { client_id, invoice_number, issue_date, due_date, status, items } = req.body;
     const userId = parseInt(req.user.id, 10);
     const client = await db.connect();
     try {
         await client.query('BEGIN');
-<<<<<<< HEAD
-=======
-        // 'grandTotal' es calculado aquí
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         const { subtotal, taxTotals, grandTotal, processedItems } = await calculateInvoiceTotals(userId, items, client);
 
         const invoiceQuery = `INSERT INTO invoices (user_id, client_id, invoice_number, issue_date, due_date, status, subtotal, tax1_total, tax2_total, tax3_total, tax4_total, total_amount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING invoice_id;`;
@@ -107,17 +66,9 @@ const createInvoice = async (req, res) => {
         const newEntry = await client.query(entryQuery, [userId, issue_date, entryDesc, invoiceId]);
         const entryId = newEntry.rows[0].entry_id;
 
-<<<<<<< HEAD
         await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Debito', $3);`, [entryId, default_accounts_receivable, grandTotal]);
         await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Credito', $3);`, [entryId, default_sales_income, subtotal]);
         // TODO: Añadir líneas de crédito para cada cuenta de impuesto
-=======
-        // --- LA CORRECCIÓN ESTÁ AQUÍ ---
-        // Usamos 'grandTotal' para el débito y 'subtotal' para el crédito de ingresos.
-        await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Debito', $3);`, [entryId, default_accounts_receivable, grandTotal]);
-        await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Credito', $3);`, [entryId, default_sales_income, subtotal]);
-        // A futuro, se podrían añadir líneas de crédito para cada cuenta de impuesto.
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 
         await client.query('COMMIT');
         res.status(201).json({ msg: 'Factura y asiento contable creados exitosamente' });
@@ -158,11 +109,6 @@ const updateInvoice = async (req, res) => {
         const entryQuery = `INSERT INTO journal_entries (user_id, entry_date, description, invoice_id) VALUES ($1, $2, $3, $4) RETURNING entry_id;`;
         const newEntry = await client.query(entryQuery, [userId, issue_date, entryDesc, id]);
         const entryId = newEntry.rows[0].entry_id;
-<<<<<<< HEAD
-=======
-
-        // --- Y LA CORRECCIÓN TAMBIÉN APLICA AQUÍ ---
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Debito', $3);`, [entryId, default_accounts_receivable, grandTotal]);
         await client.query(`INSERT INTO journal_entry_lines (entry_id, account_id, line_type, amount) VALUES ($1, $2, 'Credito', $3);`, [entryId, default_sales_income, subtotal]);
 
@@ -183,10 +129,6 @@ const getInvoices = async (req, res) => {
         const limit = parseInt(req.query.limit, 10) || 10;
         const offset = (page - 1) * limit;
 
-<<<<<<< HEAD
-=======
-        // LA CORRECCIÓN: Unimos la tabla de pagos para calcular el total pagado por factura
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         const query = `
             SELECT
                 i.invoice_id, i.invoice_number, i.total_amount, i.status, i.due_date, c.client_name,
@@ -246,18 +188,9 @@ const getInvoiceById = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
 const getNextInvoiceNumber = async (req, res) => {
     try {
         const userId = parseInt(req.user.id, 10);
-=======
-// @desc    Obtener el siguiente número de factura sugerido
-const getNextInvoiceNumber = async (req, res) => {
-    try {
-        const userId = parseInt(req.user.id, 10);
-
-        // Consulta para encontrar el número de factura más alto para el usuario con el prefijo 'INV-'
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         const query = `
             SELECT invoice_number FROM invoices
             WHERE user_id = $1 AND invoice_number LIKE 'INV-%'
@@ -265,24 +198,13 @@ const getNextInvoiceNumber = async (req, res) => {
             LIMIT 1;
         `;
         const result = await db.query(query, [userId]);
-<<<<<<< HEAD
-=======
-
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         let nextNumber = 1;
         if (result.rows.length > 0) {
             const lastNumberStr = result.rows[0].invoice_number.split('-')[1];
             const lastNumber = parseInt(lastNumberStr, 10);
             nextNumber = lastNumber + 1;
         }
-<<<<<<< HEAD
         const nextInvoiceNumber = `INV-${String(nextNumber).padStart(4, '0')}`;
-=======
-
-        // Formateamos el número para que tenga ceros a la izquierda (ej: 5 -> "0005")
-        const nextInvoiceNumber = `INV-${String(nextNumber).padStart(4, '0')}`;
-
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         res.json({ nextInvoiceNumber });
     } catch (err) {
         console.error(err.message);
@@ -290,10 +212,6 @@ const getNextInvoiceNumber = async (req, res) => {
     }
 };
 
-<<<<<<< HEAD
-=======
-// @desc    Eliminar una factura
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 const deleteInvoice = async (req, res) => {
     try {
         const { id } = req.params;

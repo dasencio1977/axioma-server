@@ -10,12 +10,8 @@ const {
     deleteInvoice,
     addPaymentToInvoice,
     updateInvoiceStatus,
-<<<<<<< HEAD
     downloadInvoicePdf,
     getNextInvoiceNumber
-=======
-    getNextInvoiceNumber,
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 } = require('../controllers/invoiceController');
 
 router.use(authMiddleware);
@@ -30,13 +26,6 @@ router.post('/:id/payments', addPaymentToInvoice);
 router.put('/:id/status', updateInvoiceStatus);
 router.get('/:id/pdf', downloadInvoicePdf);
 
-<<<<<<< HEAD
-=======
-// Ruta para el siguiente número de factura (debe ir antes de /:id)
-router.get('/next-number', getNextInvoiceNumber);
-
-// Ruta para manejar una factura específica por su ID.
->>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
 router.route('/:id')
     .get(getInvoiceById)
     .put(updateInvoice)
