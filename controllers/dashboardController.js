@@ -6,12 +6,20 @@ const getDashboardSummary = async (req, res) => {
         const userId = parseInt(req.user.id, 10);
 
         const [revenueResult, receivableResult, clientCountResult, overdueCountResult] = await Promise.all([
+<<<<<<< HEAD
             // 1. Calcular Ingresos Totales (Facturas 'Pagada')
+=======
+            // Ingresos Totales (sin cambios)
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             db.query(
                 "SELECT COALESCE(SUM(total_amount), 0) AS total_revenue FROM invoices WHERE user_id = $1 AND status = 'Pagada'",
                 [userId]
             ),
+<<<<<<< HEAD
             // 2. Calcular Cuentas por Cobrar (Saldo pendiente de facturas no pagadas)
+=======
+            // Cuentas por Cobrar (sin cambios)
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             db.query(`
                 SELECT COALESCE(SUM(i.total_amount - COALESCE(p.total_paid, 0)), 0) AS total_receivable
                 FROM invoices i
@@ -22,12 +30,21 @@ const getDashboardSummary = async (req, res) => {
                 ) p ON i.invoice_id = p.invoice_id
                 WHERE i.user_id = $1 AND i.status IN ('Enviada', 'Vencida', 'Parcialmente Pagada');
             `, [userId]),
+<<<<<<< HEAD
             // 3. Contar clientes
+=======
+            // Conteo de Clientes (sin cambios)
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             db.query(
                 "SELECT COUNT(*) AS client_count FROM clients WHERE user_id = $1",
                 [userId]
             ),
+<<<<<<< HEAD
             // 4. Contar facturas vencidas (en tiempo real)
+=======
+
+            // LA CORRECCIÓN: Calcular las facturas vencidas en tiempo real
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             db.query(`
                 SELECT COUNT(*) AS overdue_count 
                 FROM invoices 

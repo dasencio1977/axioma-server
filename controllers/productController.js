@@ -33,6 +33,7 @@ const getProducts = async (req, res) => {
 
 const createProduct = async (req, res) => {
     try {
+<<<<<<< HEAD
         const userId = parseInt(req.user.id, 10);
         const {
             code, name, product_type, price, cost, gl_account_id,
@@ -55,6 +56,15 @@ const createProduct = async (req, res) => {
                 tax1_name, !!tax1_applies, tax2_name, !!tax2_applies,
                 tax3_name, !!tax3_applies, tax4_name, !!tax4_applies
             ]
+=======
+        const userId = req.user.id;
+        const { code, name, product_type, price, cost, account_name, sub_account, tax_account, tax1_name, tax1_applies, tax2_name, tax2_applies, tax3_name, tax3_applies, tax4_name, tax4_applies } = req.body;
+
+        const newProduct = await db.query(
+            `INSERT INTO products (user_id, code, name, product_type, price, cost, account_name, sub_account, tax_account, tax1_name, tax1_applies, tax2_name, tax2_applies, tax3_name, tax3_applies, tax4_name, tax4_applies) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+            [userId, code, name, product_type, price, cost, account_name, sub_account, tax_account, tax1_name, tax1_applies, tax2_name, tax2_applies, tax3_name, tax3_applies, tax4_name, tax4_applies]
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         );
         res.status(201).json(newProduct.rows[0]);
     } catch (err) {
@@ -67,6 +77,7 @@ const updateProduct = async (req, res) => {
     try {
         const userId = parseInt(req.user.id, 10);
         const { id } = req.params;
+<<<<<<< HEAD
         const {
             code, name, product_type, price, cost, gl_account_id,
             is_sales_item, is_purchase_item, is_service_item,
@@ -88,6 +99,13 @@ const updateProduct = async (req, res) => {
                 tax3_name, !!tax3_applies, tax4_name, !!tax4_applies,
                 id, userId
             ]
+=======
+        const { code, name, product_type, price, cost, account_name, sub_account, tax_account, tax1_name, tax1_applies, tax2_name, tax2_applies, tax3_name, tax3_applies, tax4_name, tax4_applies } = req.body;
+
+        const updatedProduct = await db.query(
+            `UPDATE products SET code = $1, name = $2, product_type = $3, price = $4, cost = $5, account_name = $6, sub_account = $7, tax_account = $8, tax1_name = $9, tax1_applies = $10, tax2_name = $11, tax2_applies = $12, tax3_name = $13, tax3_applies = $14, tax4_name = $15, tax4_applies = $16  WHERE product_id = $17 AND user_id = $18 RETURNING *`,
+            [code, name, product_type, price, cost, account_name, sub_account, tax_account, tax1_name, tax1_applies, tax2_name, tax2_applies, tax3_name, tax3_applies, tax4_name, tax4_applies, id, userId]
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         );
         if (updatedProduct.rows.length === 0) return res.status(404).json({ msg: 'Producto no encontrado.' });
         res.json(updatedProduct.rows[0]);

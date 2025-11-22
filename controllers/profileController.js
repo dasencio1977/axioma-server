@@ -23,7 +23,11 @@ const upsertProfile = async (req, res) => {
             is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
             postal_city, postal_state, postal_country, postal_zip_code,
             fiscal_year_start, base_currency, incorporation_date,
+<<<<<<< HEAD
             default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
+=======
+            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, tax1_rate, tax2_rate, tax3_rate, tax4_rate
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         } = req.body;
 
         const query = `
@@ -33,9 +37,15 @@ const upsertProfile = async (req, res) => {
                 is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
                 postal_city, postal_state, postal_country, postal_zip_code,
                 fiscal_year_start, base_currency, incorporation_date,
+<<<<<<< HEAD
                 default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
+=======
+                default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, tax1_rate, tax2_rate, tax3_rate, tax4_rate
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             ON CONFLICT (user_id)
             DO UPDATE SET
                 company_name = EXCLUDED.company_name, email = EXCLUDED.email, phone = EXCLUDED.phone, ein = EXCLUDED.ein,
@@ -48,7 +58,15 @@ const upsertProfile = async (req, res) => {
                 fiscal_year_start = EXCLUDED.fiscal_year_start, base_currency = EXCLUDED.base_currency,
                 incorporation_date = EXCLUDED.incorporation_date, default_accounts_receivable = EXCLUDED.default_accounts_receivable,
                 default_sales_income = EXCLUDED.default_sales_income, default_accounts_payable = EXCLUDED.default_accounts_payable,
+<<<<<<< HEAD
                 default_cost_of_goods_sold = EXCLUDED.default_cost_of_goods_sold, default_cash_account = EXCLUDED.default_cash_account
+=======
+                default_cost_of_goods_sold = EXCLUDED.default_cost_of_goods_sold,
+                tax1_rate = EXCLUDED.tax1_rate,
+                tax2_rate = EXCLUDED.tax2_rate,
+                tax3_rate = EXCLUDED.tax3_rate,
+                tax4_rate = EXCLUDED.tax4_rate
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
             RETURNING *;
         `;
         const values = [
@@ -57,7 +75,11 @@ const upsertProfile = async (req, res) => {
             is_postal_same_as_physical, postal_address_1, postal_address_2, postal_address_3,
             postal_city, postal_state, postal_country, postal_zip_code,
             fiscal_year_start, base_currency, incorporation_date,
+<<<<<<< HEAD
             default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, default_cash_account
+=======
+            default_accounts_receivable, default_sales_income, default_accounts_payable, default_cost_of_goods_sold, tax1_rate, tax2_rate, tax3_rate, tax4_rate
+>>>>>>> 73caa98416f2e1c2d5ca1d2daec3e98380901cf1
         ];
 
         const updatedProfile = await db.query(query, values);
